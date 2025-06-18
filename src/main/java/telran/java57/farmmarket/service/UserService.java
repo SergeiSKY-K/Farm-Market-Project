@@ -6,8 +6,8 @@ import telran.java57.farmmarket.dto.UserDto;
 import telran.java57.farmmarket.dto.UserRegisterDto;
 
 public interface UserService {
-    UserDto registerNewUser(UserRegisterDto dto);
-    UserDto getUserByLogin(String login);
+    UserDto register(UserRegisterDto userRegisterDto);
+    UserDto getUser(String login);
     void changePassword(String login,String newPassword);
     UserDto removeUser(String login);
     UserDto updateUser(String login, UpdateUserDto updateUserDto);

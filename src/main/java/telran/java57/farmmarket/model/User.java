@@ -11,7 +11,6 @@ import java.util.Set;
 @Document(collection = "users")
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class User {
     @Id
@@ -24,4 +23,24 @@ public class User {
     private String lastName;
     @Singular
     private Set<Role> roles = new HashSet<>();
+
+    public User(String login, String password, String firstName, String lastName) {
+        this.login = login;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public User() {
+        roles = new HashSet<>();
+        roles.add(Role.USER);
+    }
+
+    public boolean addRole(String role){
+        return roles.add(Role.valueOf(role.toUpperCase()));
+    }
+    public boolean removeRole(String role){
+        return roles.remove(Role.valueOf(role.toUpperCase()));
+    }
 }
+

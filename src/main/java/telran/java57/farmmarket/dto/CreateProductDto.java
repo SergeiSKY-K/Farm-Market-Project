@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 public class CreateProductDto {
     private String name;
-    private int price;
+    private Double price;
     private int quantity;
     private String category;
 }

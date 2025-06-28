@@ -9,7 +9,7 @@ import lombok.*;
 public class ResponseProductDto {
     private String id;
     private String name;
-    private int price;
+    private Double price;
     private int quantity;
     private String category;
 }

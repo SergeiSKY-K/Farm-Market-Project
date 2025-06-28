@@ -18,7 +18,7 @@ public class Product {
     @Setter
     private String name;
     @Setter
-    private int price;
+    private Double price;
     @Setter
     private int quantity;
     @Setter

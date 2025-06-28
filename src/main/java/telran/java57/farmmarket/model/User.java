@@ -22,6 +22,7 @@ public class User {
     @Setter
     private String lastName;
     @Singular
+    @Setter
     private Set<Role> roles = new HashSet<>();
 
     public User(String login, String password, String firstName, String lastName) {

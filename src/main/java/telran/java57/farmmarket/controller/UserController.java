@@ -9,9 +9,12 @@ import telran.java57.farmmarket.dto.RolesDto;
 import telran.java57.farmmarket.dto.UpdateUserDto;
 import telran.java57.farmmarket.dto.UserDto;
 import telran.java57.farmmarket.dto.UserRegisterDto;
+import telran.java57.farmmarket.dto.exceptions.UserNotFoundException;
+import telran.java57.farmmarket.model.User;
 import telran.java57.farmmarket.service.UserService;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -24,7 +27,6 @@ public class UserController {
     public UserDto register(@RequestBody UserRegisterDto userRegisterDto){
         return userService.register(userRegisterDto);
     }
-
     @DeleteMapping("/user/{login}")
     public UserDto removeUser(@PathVariable String login){
         return userService.removeUser(login);
@@ -54,5 +56,9 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(Principal principal,@RequestHeader("X-Password") String newPassword){
         userService.changePassword(principal.getName(),newPassword);
+    }
+    @GetMapping("/users")
+    public List<UserDto> getAllUsers(Principal principal) {
+        return userService.getAllUsers();
     }
 }

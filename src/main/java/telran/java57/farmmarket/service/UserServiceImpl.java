@@ -14,6 +14,10 @@ import telran.java57.farmmarket.dto.exceptions.UserNotFoundException;
 import telran.java57.farmmarket.model.Role;
 import telran.java57.farmmarket.model.User;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +67,13 @@ public class UserServiceImpl implements UserService{
         if (updateUserDto.getLastName()!=null){
             user.setLastName(updateUserDto.getLastName());
         }
+        if (updateUserDto.getRoles() != null && !updateUserDto.getRoles().isEmpty()) {
+            Set<Role> newRoles = updateUserDto.getRoles().stream()
+                    .map(String::toUpperCase)
+                    .map(Role::valueOf)
+                    .collect(Collectors.toSet());
+            user.setRoles(newRoles);
+        }
         userRepository.save(user);
         return modelMapper.map(user,UserDto.class);
     }
@@ -80,5 +91,12 @@ public class UserServiceImpl implements UserService{
             userRepository.save(user);
         }
         return modelMapper.map(user, RolesDto.class);
+    }
+
+    @Override
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .collect(Collectors.toList());
     }
 }

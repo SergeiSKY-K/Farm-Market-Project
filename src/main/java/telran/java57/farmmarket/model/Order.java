@@ -27,4 +27,6 @@ public class Order {
     private OrderStatus status;
 
     private Double totalPrice;
+
+    private PaymentStatus paymentStatus;
 }

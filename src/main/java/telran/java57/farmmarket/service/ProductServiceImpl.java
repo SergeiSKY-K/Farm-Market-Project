@@ -2,6 +2,9 @@ package telran.java57.farmmarket.service;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import telran.java57.farmmarket.dao.ProductRepository;
 import telran.java57.farmmarket.dto.CreateProductDto;
@@ -23,6 +26,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseProductDto addNewProduct(CreateProductDto dto) {
         Product product =modelMapper.map(dto,Product.class);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String supplierLogin = authentication.getName();
+        product.setSupplierLogin(supplierLogin);
         product = productRepository.save(product);
         return modelMapper.map(product,ResponseProductDto.class);
     }
@@ -30,6 +36,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseProductDto updateProduct(String id, UpdateProductDto dto) {
         Product product = productRepository.findById(id).orElseThrow(()-> new ProductNotFoundException(id));
+
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!currentUser.equals(product.getSupplierLogin())) {
+            throw new AccessDeniedException("You can update only your own products.");
+        }
         modelMapper.map(dto,product);
         product = productRepository.save(product);
         return modelMapper.map(product,ResponseProductDto.class);
@@ -52,6 +63,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseProductDto deleteProduct(String id) {
         Product product = productRepository.findById(id).orElseThrow(()-> new ProductNotFoundException(id));
+
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!currentUser.equals(product.getSupplierLogin())) {
+            throw new AccessDeniedException("You can delete only your own products.");
+        }
+
         productRepository.deleteById(id);
         return modelMapper.map(product,ResponseProductDto.class);
     }
@@ -61,6 +78,14 @@ public class ProductServiceImpl implements ProductService {
         List <Product> products = productRepository.findByCategory(category);
         return products.stream()
                 .map(product -> modelMapper.map(product,ResponseProductDto.class))
+                .toList();
+    }
+
+    @Override
+    public List<ResponseProductDto> getProductsBySupplier(String supplierLogin) {
+        List<Product> products = productRepository.findBySupplierLogin(supplierLogin);
+        return products.stream()
+                .map(product -> modelMapper.map(product, ResponseProductDto.class))
                 .toList();
     }
 }

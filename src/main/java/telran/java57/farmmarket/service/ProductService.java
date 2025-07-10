@@ -18,4 +18,6 @@ public interface ProductService {
     ResponseProductDto deleteProduct(String id);
 
     List<ResponseProductDto> getByCategory(String category);
+
+    List<ResponseProductDto> getProductsBySupplier(String supplierLogin);
 }

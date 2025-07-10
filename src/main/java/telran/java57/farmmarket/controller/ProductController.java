@@ -2,6 +2,8 @@ package telran.java57.farmmarket.controller;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import telran.java57.farmmarket.dto.CreateProductDto;
 import telran.java57.farmmarket.dto.ResponseProductDto;
@@ -41,5 +43,11 @@ public class ProductController {
     @GetMapping("/category/{category}")
     public List<ResponseProductDto> getByCategory(@PathVariable String category){
         return marketService.getByCategory(category);
+    }
+    @GetMapping("/my-products")
+    public List<ResponseProductDto> getMyProducts() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String supplierLogin = authentication.getName();
+        return marketService.getProductsBySupplier(supplierLogin);
     }
 }

@@ -31,11 +31,15 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/product").permitAll()
                 .requestMatchers(HttpMethod.GET, "/product/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/product/category/{category}").permitAll()
-                .requestMatchers(HttpMethod.POST, "/product").hasRole("ADMINISTRATOR")
-                .requestMatchers(HttpMethod.PUT, "/product/{id}").hasRole("ADMINISTRATOR")
-                .requestMatchers(HttpMethod.DELETE, "/product/{id}").hasRole("ADMINISTRATOR")
-                .requestMatchers(HttpMethod.POST, "/orders").authenticated()
-                .requestMatchers(HttpMethod.POST, "/product").hasRole("ADMINISTRATOR")
+
+                .requestMatchers(HttpMethod.POST, "/product").hasAnyRole("ADMINISTRATOR","SUPPLIER")
+                .requestMatchers(HttpMethod.PUT, "/product/{id}").hasAnyRole("ADMINISTRATOR","SUPPLIER")
+                .requestMatchers(HttpMethod.DELETE, "/product/{id}").hasAnyRole("ADMINISTRATOR","SUPPLIER")
+
+                .requestMatchers(HttpMethod.POST, "/orders").hasRole("USER")
+                .requestMatchers(HttpMethod.POST, "/orders/{id}/pay").hasRole("USER")
+
+                .requestMatchers(HttpMethod.GET, "/orders/supplier").hasRole("SUPPLIER")
                 .anyRequest().authenticated()
         );
 

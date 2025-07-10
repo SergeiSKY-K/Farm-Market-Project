@@ -23,4 +23,6 @@ public class Product {
     private int quantity;
     @Setter
     private String category;
+    @Setter
+    private String supplierLogin;
 }

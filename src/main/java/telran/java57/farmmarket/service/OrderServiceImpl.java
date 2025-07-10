@@ -2,15 +2,18 @@ package telran.java57.farmmarket.service;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import telran.java57.farmmarket.dao.OrderRepository;
 import telran.java57.farmmarket.dao.ProductRepository;
 import telran.java57.farmmarket.dto.OrderDto;
 import telran.java57.farmmarket.dto.OrderResponseDto;
 import telran.java57.farmmarket.dto.exceptions.NotEnoughQuantityOfProductException;
+import telran.java57.farmmarket.dto.exceptions.OrderNotFoundException;
 import telran.java57.farmmarket.dto.exceptions.ProductNotFoundException;
 import telran.java57.farmmarket.model.Order;
 import telran.java57.farmmarket.model.OrderStatus;
+import telran.java57.farmmarket.model.PaymentStatus;
 import telran.java57.farmmarket.model.Product;
 
 import java.time.LocalDateTime;
@@ -63,10 +66,41 @@ public class OrderServiceImpl implements OrderService{
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.CREATED);
         order.setTotalPrice(totalPrice);
+        order.setPaymentStatus(PaymentStatus.PENDING);
 
         Order savedOrder = orderRepository.save(order);
 
         return modelMapper.map(savedOrder, OrderResponseDto.class);
+    }
+
+    @Override
+    public List<OrderResponseDto> getOrdersBySupplierLogin(String supplierLogin) {
+        List<Product> products = productRepository.findBySupplierLogin(supplierLogin);
+
+        List<String> productsId = products.stream()
+                .map(Product::getId)
+                .toList();
+
+        List<Order> orders = orderRepository.findByProductIdsContainingAny(productsId);
+
+        return orders.stream()
+                .map(order -> modelMapper.map(order,OrderResponseDto.class))
+                .toList();
+    }
+
+    @Override
+    public OrderResponseDto markOrderAsPaid(String orderId, String userLogin) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if (!order.getUserLogin().equals(userLogin)) {
+            throw new AccessDeniedException("You can only pay for your own orders.");
+        }
+
+        order.setPaymentStatus(PaymentStatus.PAID);
+        orderRepository.save(order);
+
+        return modelMapper.map(order, OrderResponseDto.class);
     }
 }
 

@@ -25,4 +25,6 @@ public class Product {
     private String category;
     @Setter
     private String supplierLogin;
+    @Setter
+    private ProductStatus status;
 }

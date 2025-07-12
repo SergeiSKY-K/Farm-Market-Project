@@ -61,4 +61,8 @@ public class UserController {
     public List<UserDto> getAllUsers(Principal principal) {
         return userService.getAllUsers();
     }
+    @GetMapping("/suppliers")
+    public List<UserDto> getAllSuppliers() {
+        return userService.getAllSuppliers();
+    }
 }

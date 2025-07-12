@@ -20,4 +20,6 @@ public interface ProductService {
     List<ResponseProductDto> getByCategory(String category);
 
     List<ResponseProductDto> getProductsBySupplier(String supplierLogin);
+
+    ResponseProductDto toggleProductStatus(String id, boolean block);
 }

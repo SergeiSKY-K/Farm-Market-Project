@@ -32,4 +32,8 @@ public class OrderController {
         String userLogin = authentication.getName();
         return orderService.markOrderAsPaid(id, userLogin);
     }
+    @GetMapping("/moderator")
+    public List<OrderResponseDto> getAllOrdersForModerator() {
+        return orderService.getAllOrders(); // нужен метод ниже
+    }
 }

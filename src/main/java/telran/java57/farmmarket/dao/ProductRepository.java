@@ -2,10 +2,12 @@ package telran.java57.farmmarket.dao;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import telran.java57.farmmarket.model.Product;
+import telran.java57.farmmarket.model.ProductStatus;
 
 import java.util.List;
 
 public interface ProductRepository extends MongoRepository<Product,String> {
     List<Product> findByCategory(String category);
     List<Product> findBySupplierLogin(String supplierLogin);
+    List<Product> findByStatus(ProductStatus status);
 }

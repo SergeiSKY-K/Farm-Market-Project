@@ -99,4 +99,12 @@ public class UserServiceImpl implements UserService{
                 .map(user -> modelMapper.map(user, UserDto.class))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<UserDto> getAllSuppliers() {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getRoles().contains(Role.SUPPLIER))
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
+    }
 }

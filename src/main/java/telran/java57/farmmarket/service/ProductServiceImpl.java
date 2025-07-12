@@ -12,6 +12,8 @@ import telran.java57.farmmarket.dto.ResponseProductDto;
 import telran.java57.farmmarket.dto.UpdateProductDto;
 import telran.java57.farmmarket.dto.exceptions.ProductNotFoundException;
 import telran.java57.farmmarket.model.Product;
+import telran.java57.farmmarket.model.ProductStatus;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,7 @@ public class ProductServiceImpl implements ProductService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String supplierLogin = authentication.getName();
         product.setSupplierLogin(supplierLogin);
+        product.setStatus(ProductStatus.ACTIVE);
         product = productRepository.save(product);
         return modelMapper.map(product,ResponseProductDto.class);
     }
@@ -54,9 +57,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ResponseProductDto> getAllProducts() {
-        List <Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findByStatus(ProductStatus.ACTIVE);
         return products.stream()
-                .map(product -> modelMapper.map(product,ResponseProductDto.class))
+                .map(product -> modelMapper.map(product, ResponseProductDto.class))
                 .collect(Collectors.toList());
     }
 
@@ -87,5 +90,16 @@ public class ProductServiceImpl implements ProductService {
         return products.stream()
                 .map(product -> modelMapper.map(product, ResponseProductDto.class))
                 .toList();
+    }
+
+    @Override
+    public ResponseProductDto toggleProductStatus(String id, boolean block) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        product.setStatus(block ? ProductStatus.BLOCKED : ProductStatus.ACTIVE);
+        productRepository.save(product);
+
+        return modelMapper.map(product, ResponseProductDto.class);
     }
 }

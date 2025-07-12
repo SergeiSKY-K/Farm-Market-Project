@@ -15,4 +15,5 @@ public interface UserService {
     UserDto updateUser(String login, UpdateUserDto updateUserDto);
     RolesDto changeRolesList(String login, String role, boolean isAddRole);
     List<UserDto> getAllUsers();
+    List<UserDto> getAllSuppliers();
 }

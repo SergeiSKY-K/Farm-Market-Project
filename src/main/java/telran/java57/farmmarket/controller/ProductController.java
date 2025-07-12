@@ -50,4 +50,8 @@ public class ProductController {
         String supplierLogin = authentication.getName();
         return marketService.getProductsBySupplier(supplierLogin);
     }
+    @PutMapping("/{id}/status")
+    public ResponseProductDto toggleProductStatus(@PathVariable String id, @RequestParam boolean block) {
+        return marketService.toggleProductStatus(id, block);
+    }
 }

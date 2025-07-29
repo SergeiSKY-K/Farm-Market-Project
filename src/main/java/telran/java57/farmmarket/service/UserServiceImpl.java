@@ -2,6 +2,7 @@ package telran.java57.farmmarket.service;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import telran.java57.farmmarket.dao.UserRepository;
@@ -45,8 +46,9 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void changePassword(String login, String newPassword) {
-        User user = userRepository.findById(login).orElseThrow(()->new UserNotFoundException(login));
+    public void changePassword(Authentication authentication, String newPassword) {
+        String login = authentication.getName();
+        User user = userRepository.findById(login).orElseThrow(() -> new UserNotFoundException(login));
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }

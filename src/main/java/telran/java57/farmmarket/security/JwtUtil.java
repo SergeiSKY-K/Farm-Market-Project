@@ -60,7 +60,14 @@ public class JwtUtil {
     public boolean validateToken(String token, UserDetails userDetails) {
         return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
-
+    public boolean validateRefreshToken(String token) {
+        try {
+            DecodedJWT jwt = getDecodedJWT(token);
+            return jwt.getExpiresAt().after(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
     private boolean isTokenExpired(String token) {
         return getDecodedJWT(token).getExpiresAt().before(new Date());
     }

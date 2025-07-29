@@ -34,6 +34,6 @@ public class OrderController {
     }
     @GetMapping("/moderator")
     public List<OrderResponseDto> getAllOrdersForModerator() {
-        return orderService.getAllOrders(); // нужен метод ниже
+        return orderService.getAllOrders();
     }
 }

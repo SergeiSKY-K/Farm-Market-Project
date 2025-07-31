@@ -57,9 +57,8 @@ public class AuthService {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .path("/")
-                .domain("localhost")
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .maxAge(Duration.ofDays(7))
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -78,7 +77,7 @@ public class AuthService {
                 .httpOnly(true)
                 .path("/")
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")
                 .maxAge(0)
                 .build();
 

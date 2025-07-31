@@ -28,11 +28,16 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        Dotenv dotenv = Dotenv.load(); // .env загрузка
-
-        secret = dotenv.get("JWT_SECRET");
-        accessExpiration = Long.parseLong(dotenv.get("JWT_ACCESS_EXPIRATION"));
-        refreshExpiration = Long.parseLong(dotenv.get("JWT_REFRESH_EXPIRATION"));
+        try {
+            Dotenv dotenv = Dotenv.load();
+            secret = dotenv.get("JWT_SECRET", System.getenv("JWT_SECRET"));
+            accessExpiration = Long.parseLong(dotenv.get("JWT_ACCESS_EXPIRATION", System.getenv("JWT_ACCESS_EXPIRATION")));
+            refreshExpiration = Long.parseLong(dotenv.get("JWT_REFRESH_EXPIRATION", System.getenv("JWT_REFRESH_EXPIRATION")));
+        } catch (Exception e) {
+            secret = System.getenv("JWT_SECRET");
+            accessExpiration = Long.parseLong(System.getenv("JWT_ACCESS_EXPIRATION"));
+            refreshExpiration = Long.parseLong(System.getenv("JWT_REFRESH_EXPIRATION"));
+        }
 
         algorithm = Algorithm.HMAC256(secret);
     }

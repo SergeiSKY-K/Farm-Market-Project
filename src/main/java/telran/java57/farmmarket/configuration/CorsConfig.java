@@ -15,11 +15,12 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
+                        .allowedOriginPatterns("http://localhost:*")
                         .allowedOrigins(
-                                "http://localhost:5173",
-                                "https://farm-market-frontend.vercel.app"
+                                "https://farm-market-frontend.vercel.app",
+                                "https://market-frontend-planto.vercel.app"
                         )
-                        .allowedMethods("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD")
                         .allowedHeaders("*")
                         .exposedHeaders("Authorization")
                         .allowCredentials(true);
@@ -27,3 +28,27 @@ public class CorsConfig {
         };
     }
 }
+
+//@Configuration
+//public class CorsConfig {
+//
+//    @Bean
+//    public WebMvcConfigurer corsConfigurer() {
+//        return new WebMvcConfigurer() {
+//            @Override
+//            public void addCorsMappings(CorsRegistry registry) {
+//                registry.addMapping("/**")
+//                        .allowedOrigins(
+//                                "http://localhost:5176",
+//                                "https://farm-market-frontend.vercel.app",
+//                                "http://localhost:5183",
+//                                "https://market-frontend-planto.vercel.app"
+//                        )
+//                        .allowedMethods("*")
+//                        .allowedHeaders("*")
+//                        .exposedHeaders("Authorization")
+//                        .allowCredentials(true);
+//            }
+//        };
+//    }
+//}

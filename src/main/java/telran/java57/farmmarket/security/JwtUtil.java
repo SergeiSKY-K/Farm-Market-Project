@@ -10,10 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
+import org.springframework.security.core.GrantedAuthority;
 import java.security.Key;
 import java.util.Date;
-
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -43,8 +44,18 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails.getUsername(), accessExpiration);
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return JWT.create()
+                .withSubject(userDetails.getUsername())
+                .withClaim("roles", roles)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + accessExpiration))
+                .sign(algorithm);
     }
+
 
     public String generateRefreshToken(UserDetails userDetails) {
         return generateToken(userDetails.getUsername(), refreshExpiration);

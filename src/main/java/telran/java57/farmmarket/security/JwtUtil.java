@@ -7,11 +7,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.GrantedAuthority;
-import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,7 +54,6 @@ public class JwtUtil {
                 .sign(algorithm);
     }
 
-
     public String generateRefreshToken(UserDetails userDetails) {
         return generateToken(userDetails.getUsername(), refreshExpiration);
     }
@@ -73,9 +70,15 @@ public class JwtUtil {
         return getDecodedJWT(token).getSubject();
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
+
+    public boolean validateToken(String token, String username) {
+        try {
+            return extractUsername(token).equals(username) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
+
     public boolean validateRefreshToken(String token) {
         try {
             DecodedJWT jwt = getDecodedJWT(token);
@@ -84,6 +87,7 @@ public class JwtUtil {
             return false;
         }
     }
+
     private boolean isTokenExpired(String token) {
         return getDecodedJWT(token).getExpiresAt().before(new Date());
     }

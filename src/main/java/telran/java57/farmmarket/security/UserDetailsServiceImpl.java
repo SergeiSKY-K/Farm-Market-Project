@@ -25,7 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(username));
 
         Collection<String> authorities = user.getRoles().stream()
-                .map(Enum::name)
+                .map(role -> "ROLE_" + role.name())
                 .toList();
 
         return new org.springframework.security.core.userdetails.User(

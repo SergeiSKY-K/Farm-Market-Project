@@ -43,7 +43,7 @@ public class JwtUtil {
 
     public String generateAccessToken(UserDetails userDetails) {
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.toList());
 
         return JWT.create()

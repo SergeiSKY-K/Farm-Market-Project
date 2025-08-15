@@ -1,32 +1,20 @@
 package telran.java57.farmmarket.controller;
 
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.parameters.P;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import telran.java57.farmmarket.dao.RefreshTokenRepository;
 import telran.java57.farmmarket.dao.UserRepository;
 import telran.java57.farmmarket.dto.*;
-import telran.java57.farmmarket.dto.exceptions.UserNotFoundException;
-import telran.java57.farmmarket.model.RefreshTokenEntity;
-import telran.java57.farmmarket.model.User;
 import telran.java57.farmmarket.security.JwtUtil;
 import telran.java57.farmmarket.security.UserDetailsServiceImpl;
 import telran.java57.farmmarket.service.UserService;
 
-import java.security.Principal;
-import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -97,8 +85,8 @@ public class UserController {
 
     @PutMapping("/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changePassword(Authentication authentication, @RequestHeader("X-Password") String newPassword) {
-        userService.changePassword(authentication, newPassword);
+    public void changePassword(Authentication authentication, @RequestBody ChangePasswordDto body) {
+        userService.changePassword(authentication, body);
     }
     @GetMapping
     public List<UserDto> getAllUsers() {

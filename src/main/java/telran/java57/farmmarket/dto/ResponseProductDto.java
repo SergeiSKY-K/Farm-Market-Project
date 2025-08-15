@@ -12,4 +12,5 @@ public class ResponseProductDto {
     private Double price;
     private int quantity;
     private String category;
+    private String imageUrl;
 }

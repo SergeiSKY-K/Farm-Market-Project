@@ -22,8 +22,6 @@ import java.time.Duration;
 @RequestMapping("/auth")
 public class RefreshController {
 
-    private final JwtUtil jwtUtil;
-    private final UserDetailsServiceImpl userDetailsService;
     private final AuthService authService;
 
     @PostMapping("/refresh")
@@ -34,7 +32,6 @@ public class RefreshController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", dto.getRefreshToken())
                 .httpOnly(true)
                 .path("/")
-                .domain("localhost")
                 .secure(false)
                 .sameSite("Lax")
                 .maxAge(Duration.ofDays(7))
@@ -49,11 +46,11 @@ public class RefreshController {
     private String extractTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
+                if ("refreshToken".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isBlank()) {
                     return cookie.getValue();
                 }
             }
         }
-        throw new RuntimeException("Refresh token cookie not found");
+        throw new RuntimeException("Refresh token cookie not found or empty");
     }
 }

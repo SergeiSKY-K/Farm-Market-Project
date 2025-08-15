@@ -3,6 +3,7 @@ package telran.java57.farmmarket.service;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseProductDto addNewProduct(CreateProductDto dto) {
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new IllegalArgumentException("Product name is required");
+        }
+        if (dto.getPrice() == null || dto.getPrice() <= 0) {
+            throw new IllegalArgumentException("Product price must be positive");
+        }
         Product product =modelMapper.map(dto,Product.class);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String supplierLogin = authentication.getName();
+
+
+        String supplierLogin = SecurityContextHolder.getContext().getAuthentication().getName();
         product.setSupplierLogin(supplierLogin);
         product.setStatus(ProductStatus.ACTIVE);
         product = productRepository.save(product);
@@ -57,23 +65,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ResponseProductDto> getAllProducts() {
-        List<Product> products = productRepository.findByStatus(ProductStatus.ACTIVE);
+        List<Product> products = productRepository
+                .findByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE);
         return products.stream()
                 .map(product -> modelMapper.map(product, ResponseProductDto.class))
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATOR') or (hasRole('SUPPLIER') and @productSecurity.isOwner(#id, authentication.name))")
     @Override
     public ResponseProductDto deleteProduct(String id) {
-        Product product = productRepository.findById(id).orElseThrow(()-> new ProductNotFoundException(id));
-
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!currentUser.equals(product.getSupplierLogin())) {
-            throw new AccessDeniedException("You can delete only your own products.");
-        }
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
         productRepository.deleteById(id);
-        return modelMapper.map(product,ResponseProductDto.class);
+        return modelMapper.map(product, ResponseProductDto.class);
     }
 
     @Override

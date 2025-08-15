@@ -1,17 +1,14 @@
 package telran.java57.farmmarket.service;
 
 import org.springframework.security.core.Authentication;
-import telran.java57.farmmarket.dto.RolesDto;
-import telran.java57.farmmarket.dto.UpdateUserDto;
-import telran.java57.farmmarket.dto.UserDto;
-import telran.java57.farmmarket.dto.UserRegisterDto;
+import telran.java57.farmmarket.dto.*;
 
 import java.util.List;
 
 public interface UserService {
     UserDto register(UserRegisterDto userRegisterDto);
     UserDto getUser(String login);
-    void changePassword(Authentication authentication, String newPassword);
+    void changePassword(Authentication authentication, ChangePasswordDto dto);
     UserDto removeUser(String login);
     UserDto updateUser(String login, UpdateUserDto updateUserDto);
     RolesDto changeRolesList(String login, String role, boolean isAddRole);

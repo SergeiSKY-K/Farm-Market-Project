@@ -10,7 +10,8 @@ import lombok.*;
 @Builder
 public class UpdateProductDto {
     private String name;
-    private int price;
-    private int quantity;
+    private Double price;
+    private Integer quantity;
     private String category;
+    private String imageUrl;
 }

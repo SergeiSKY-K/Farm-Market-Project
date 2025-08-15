@@ -1,8 +1,8 @@
 package telran.java57.farmmarket.dao;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import telran.java57.farmmarket.model.User;
+import telran.java57.farmmarket.model.UserAccount;
 
 
-public interface UserRepository extends MongoRepository<User,String> {
+public interface UserRepository extends MongoRepository<UserAccount,String> {
 }

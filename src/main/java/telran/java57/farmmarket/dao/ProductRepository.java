@@ -9,5 +9,6 @@ import java.util.List;
 public interface ProductRepository extends MongoRepository<Product,String> {
     List<Product> findByCategory(String category);
     List<Product> findBySupplierLogin(String supplierLogin);
-    List<Product> findByStatus(ProductStatus status);
+    List<Product> findByStatusOrderByCreatedAtDesc(ProductStatus status);
+    boolean existsByIdAndSupplierLogin(String id, String supplierLogin);
 }

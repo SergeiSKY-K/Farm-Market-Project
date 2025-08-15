@@ -17,7 +17,7 @@ import telran.java57.farmmarket.dto.TokenResponseDto;
 import telran.java57.farmmarket.dto.exceptions.UserNotFoundException;
 import telran.java57.farmmarket.model.RefreshTokenEntity;
 import telran.java57.farmmarket.dto.UserDto;
-import telran.java57.farmmarket.model.User;
+import telran.java57.farmmarket.model.UserAccount;
 
 import java.time.Duration;
 
@@ -35,14 +35,14 @@ public class AuthService {
     private final ModelMapper modelMapper;
 
     public ResponseEntity<UserDto> login(LoginDto loginDto, HttpServletResponse response) {
-        User user = userRepository.findById(loginDto.getUsername())
+        UserAccount userAccount = userRepository.findById(loginDto.getUsername())
                 .orElseThrow(() -> new UserNotFoundException(loginDto.getUsername()));
 
-        if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginDto.getPassword(), userAccount.getPassword())) {
             throw new BadCredentialsException("Incorrect login or password");
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getLogin());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userAccount.getLogin());
 
 
         String accessToken = jwtUtil.generateAccessToken(userDetails);
@@ -50,21 +50,21 @@ public class AuthService {
 
 
         String hashedRefresh = hash(refreshToken);
-        refreshTokenRepository.deleteById(user.getLogin());
-        refreshTokenRepository.save(new RefreshTokenEntity(user.getLogin(), hashedRefresh));
+        refreshTokenRepository.deleteById(userAccount.getLogin());
+        refreshTokenRepository.save(new RefreshTokenEntity(userAccount.getLogin(), hashedRefresh));
 
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .path("/")
-                .secure(true)
-                .sameSite("None")
+                .secure(false)
+                .sameSite("Lax")
                 .maxAge(Duration.ofDays(7))
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
 
-        UserDto dto = modelMapper.map(user, UserDto.class);
+        UserDto dto = modelMapper.map(userAccount, UserDto.class);
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .body(dto);
@@ -76,8 +76,8 @@ public class AuthService {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .path("/")
-                .secure(true)
-                .sameSite("None")
+                .secure(false)
+                .sameSite("Lax")
                 .maxAge(0)
                 .build();
 
@@ -94,10 +94,6 @@ public class AuthService {
 
         String hashedRefresh = hash(refreshToken);
         if (!hashedRefresh.equals(stored.getHashedRefreshToken()) || !jwtUtil.validateRefreshToken(refreshToken)) {
-            System.out.println("Incoming token: " + refreshToken);
-            System.out.println("Stored hash: " + stored.getHashedRefreshToken());
-            System.out.println("Incoming hash: " + hashedRefresh);
-            System.out.println("Valid by JWT: " + jwtUtil.validateRefreshToken(refreshToken));
             throw new RuntimeException("Invalid refresh token");
         }
 

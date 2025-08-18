@@ -1,7 +1,7 @@
 package telran.java57.farmmarket.model;
-
-public enum PaymentStatus {
-    PENDING,
-    PAID,
-    FAILED
-}
+//
+//public enum PaymentStatus {
+//    PENDING,
+//    PAID,
+//    FAILED
+//}

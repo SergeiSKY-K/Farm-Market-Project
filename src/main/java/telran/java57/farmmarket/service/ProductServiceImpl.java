@@ -46,15 +46,23 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseProductDto updateProduct(String id, UpdateProductDto dto) {
-        Product product = productRepository.findById(id).orElseThrow(()-> new ProductNotFoundException(id));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!currentUser.equals(product.getSupplierLogin())) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUser = auth.getName();
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .anyMatch(a -> a.equals("ROLE_ADMINISTRATOR"));
+
+        if (!isAdmin && !currentUser.equals(product.getSupplierLogin())) {
             throw new AccessDeniedException("You can update only your own products.");
         }
-        modelMapper.map(dto,product);
+
+        modelMapper.map(dto, product);
         product = productRepository.save(product);
-        return modelMapper.map(product,ResponseProductDto.class);
+        return modelMapper.map(product, ResponseProductDto.class);
     }
 
     @Override
@@ -84,17 +92,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ResponseProductDto> getByCategory(String category) {
-        List <Product> products = productRepository.findByCategory(category);
-        return products.stream()
-                .map(product -> modelMapper.map(product,ResponseProductDto.class))
+        return productRepository
+                .findByCategoryAndStatusOrderByCreatedAtDesc(category, ProductStatus.ACTIVE)
+                .stream().map(p -> modelMapper.map(p, ResponseProductDto.class))
                 .toList();
     }
 
     @Override
     public List<ResponseProductDto> getProductsBySupplier(String supplierLogin) {
-        List<Product> products = productRepository.findBySupplierLogin(supplierLogin);
-        return products.stream()
-                .map(product -> modelMapper.map(product, ResponseProductDto.class))
+        return productRepository.findBySupplierLoginOrderByCreatedAtDesc(supplierLogin)
+                .stream().map(p -> modelMapper.map(p, ResponseProductDto.class))
                 .toList();
     }
 
@@ -108,4 +115,12 @@ public class ProductServiceImpl implements ProductService {
 
         return modelMapper.map(product, ResponseProductDto.class);
     }
+
+    @Override
+    public List<ResponseProductDto> getBlockedProducts() {
+        return productRepository.findByStatusOrderByCreatedAtDesc(ProductStatus.BLOCKED)
+                .stream().map(p -> modelMapper.map(p, ResponseProductDto.class))
+                .toList();
+    }
+
 }

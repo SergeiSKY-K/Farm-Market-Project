@@ -22,4 +22,6 @@ public interface ProductService {
     List<ResponseProductDto> getProductsBySupplier(String supplierLogin);
 
     ResponseProductDto toggleProductStatus(String id, boolean block);
+
+    List<ResponseProductDto> getBlockedProducts();
 }

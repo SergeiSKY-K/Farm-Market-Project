@@ -7,8 +7,8 @@ import telran.java57.farmmarket.model.ProductStatus;
 import java.util.List;
 
 public interface ProductRepository extends MongoRepository<Product,String> {
-    List<Product> findByCategory(String category);
-    List<Product> findBySupplierLogin(String supplierLogin);
+List<Product> findByCategoryAndStatusOrderByCreatedAtDesc(String category, ProductStatus status);
+    List<Product> findBySupplierLoginOrderByCreatedAtDesc(String supplierLogin);
     List<Product> findByStatusOrderByCreatedAtDesc(ProductStatus status);
     boolean existsByIdAndSupplierLogin(String id, String supplierLogin);
 }

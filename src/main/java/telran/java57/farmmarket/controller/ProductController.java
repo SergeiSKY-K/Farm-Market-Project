@@ -54,4 +54,9 @@ public class ProductController {
     public ResponseProductDto toggleProductStatus(@PathVariable String id, @RequestParam boolean block) {
         return marketService.toggleProductStatus(id, block);
     }
+
+    @GetMapping("/blocked")
+    public List<ResponseProductDto> getBlocked() {
+        return marketService.getBlockedProducts();
+    }
 }

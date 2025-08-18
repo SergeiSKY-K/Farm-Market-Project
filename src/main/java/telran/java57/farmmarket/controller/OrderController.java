@@ -1,6 +1,11 @@
 package telran.java57.farmmarket.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,25 +20,45 @@ import java.util.List;
 @RequestMapping("/orders")
 @RequiredArgsConstructor
 public class OrderController {
+
     private final OrderService orderService;
+
     @PostMapping
-    public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderDto orderDto,Authentication authentication) {
+    public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderDto orderDto,
+                                                        Authentication authentication) {
         String userLogin = authentication.getName();
         OrderResponseDto response = orderService.createOrder(orderDto, userLogin);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    @GetMapping("/supplier")
-    public List<OrderResponseDto> getOrdersForSupplier() {
-        String supplierLogin = SecurityContextHolder.getContext().getAuthentication().getName();
-        return orderService.getOrdersBySupplierLogin(supplierLogin);
-    }
+
     @PostMapping("/{id}/pay")
     public OrderResponseDto payForOrder(@PathVariable String id, Authentication authentication) {
         String userLogin = authentication.getName();
         return orderService.markOrderAsPaid(id, userLogin);
     }
+
+    @GetMapping("/my")
+    public List<OrderResponseDto> getMyOrders(Authentication authentication) {
+        return orderService.getMyOrders(authentication.getName());
+    }
+
+    @GetMapping("/supplier")
+    public List<OrderResponseDto> getOrdersForSupplier(Authentication authentication) {
+        String supplierLogin = authentication.getName();
+        return orderService.getOrdersBySupplierLogin(supplierLogin);
+    }
+
     @GetMapping("/moderator")
-    public List<OrderResponseDto> getAllOrdersForModerator() {
-        return orderService.getAllOrders();
+    public Page<OrderResponseDto> getAllOrdersForModerator(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        Sort sort = "asc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return orderService.getAllOrders(pageable);
     }
 }

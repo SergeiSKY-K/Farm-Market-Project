@@ -2,6 +2,8 @@ package telran.java57.farmmarket.service;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import telran.java57.farmmarket.dao.OrderRepository;
@@ -11,16 +13,14 @@ import telran.java57.farmmarket.dto.OrderResponseDto;
 import telran.java57.farmmarket.dto.exceptions.NotEnoughQuantityOfProductException;
 import telran.java57.farmmarket.dto.exceptions.OrderNotFoundException;
 import telran.java57.farmmarket.dto.exceptions.ProductNotFoundException;
-import telran.java57.farmmarket.model.Order;
-import telran.java57.farmmarket.model.OrderStatus;
-import telran.java57.farmmarket.model.PaymentStatus;
-import telran.java57.farmmarket.model.Product;
+import telran.java57.farmmarket.model.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,59 +33,60 @@ public class OrderServiceImpl implements OrderService{
     @Override
     public OrderResponseDto createOrder(OrderDto orderDto, String userLogin) {
         Map<String, Integer> productQuantities = orderDto.getProductQuantities();
-
-        Set<String> requestedIds = productQuantities.keySet();
-
-        List<Product> products = productRepository.findAllById(requestedIds);
-
-        for (String id : requestedIds) {
-            boolean exists = products.stream().anyMatch(p -> p.getId().equals(id));
-            if (!exists) {
-                throw new ProductNotFoundException(id);
-            }
+        if (productQuantities == null || productQuantities.isEmpty()) {
+            throw new IllegalArgumentException("Cart is empty");
         }
 
-        double totalPrice = 0;
+        Set<String> requestedIds = productQuantities.keySet();
+        List<Product> products = productRepository.findAllById(requestedIds);
 
-        for (Product product : products) {
-            int requestedQuantity = productQuantities.get(product.getId());
 
-            if (product.getQuantity() < requestedQuantity) {
-                throw new NotEnoughQuantityOfProductException(product.getName());
+        Set<String> foundIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        for (String id : requestedIds) {
+            if (!foundIds.contains(id)) throw new ProductNotFoundException(id);
+        }
+
+        List<OrderItem> items = new ArrayList<>();
+        double total = 0d;
+
+        for (Product p : products) {
+            int reqQty = productQuantities.getOrDefault(p.getId(), 0);
+            if (reqQty <= 0) {
+                throw new IllegalArgumentException("Invalid quantity for product " + p.getId());
+            }
+            if (p.getStatus() == ProductStatus.BLOCKED) {
+                throw new IllegalStateException("Product is blocked: " + p.getName());
+            }
+            if (p.getQuantity() < reqQty) {
+                throw new NotEnoughQuantityOfProductException(p.getName());
             }
 
-            product.setQuantity(product.getQuantity() - requestedQuantity);
-            totalPrice += product.getPrice() * requestedQuantity;
+
+            p.setQuantity(p.getQuantity() - reqQty);
+
+            items.add(OrderItem.builder()
+                    .productId(p.getId())
+                    .name(p.getName())
+                    .supplierLogin(p.getSupplierLogin())
+                    .quantity(reqQty)
+                    .priceAtPurchase(p.getPrice())
+                    .build());
+
+            total += p.getPrice() * reqQty;
         }
 
         productRepository.saveAll(products);
 
-        Order order = new Order();
-        order.setUserLogin(userLogin);
-        order.setProductsId(new ArrayList<>(productQuantities.keySet()));
-        order.setCreatedAt(LocalDateTime.now());
-        order.setStatus(OrderStatus.CREATED);
-        order.setTotalPrice(totalPrice);
-        order.setPaymentStatus(PaymentStatus.PENDING);
+        Order order = Order.builder()
+                .userLogin(userLogin)
+                .items(items)
+                .totalPrice(total)
+                .status(OrderStatus.CREATED)
+                .createdAt(Instant.now())
+                .build();
 
-        Order savedOrder = orderRepository.save(order);
-
-        return modelMapper.map(savedOrder, OrderResponseDto.class);
-    }
-
-    @Override
-    public List<OrderResponseDto> getOrdersBySupplierLogin(String supplierLogin) {
-        List<Product> products = productRepository.findBySupplierLogin(supplierLogin);
-
-        List<String> productsId = products.stream()
-                .map(Product::getId)
-                .toList();
-
-        List<Order> orders = orderRepository.findByProductIdsContainingAny(productsId);
-
-        return orders.stream()
-                .map(order -> modelMapper.map(order,OrderResponseDto.class))
-                .toList();
+        Order saved = orderRepository.save(order);
+        return modelMapper.map(saved, OrderResponseDto.class);
     }
 
     @Override
@@ -94,20 +95,38 @@ public class OrderServiceImpl implements OrderService{
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         if (!order.getUserLogin().equals(userLogin)) {
-            throw new AccessDeniedException("You can only pay for your own orders.");
+            throw new AccessDeniedException("You can only pay your own order");
+        }
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new IllegalStateException("Order is not payable");
         }
 
-        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(Instant.now());
         orderRepository.save(order);
 
         return modelMapper.map(order, OrderResponseDto.class);
     }
 
     @Override
-    public List<OrderResponseDto> getAllOrders() {
-        return orderRepository.findAll().stream()
-                .map(order -> modelMapper.map(order, OrderResponseDto.class))
+    public List<OrderResponseDto> getMyOrders(String userLogin) {
+        return orderRepository.findAllByUserLoginOrderByCreatedAtDesc(userLogin)
+                .stream()
+                .map(o -> modelMapper.map(o, OrderResponseDto.class))
                 .toList();
+    }
+
+    @Override
+    public List<OrderResponseDto> getOrdersBySupplierLogin(String supplierLogin) {
+        return orderRepository.findByItemsSupplierLogin(supplierLogin, Pageable.unpaged())
+                .map(o -> modelMapper.map(o, OrderResponseDto.class))
+                .getContent();
+    }
+
+    @Override
+    public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(o -> modelMapper.map(o, OrderResponseDto.class));
     }
 }
 

@@ -3,8 +3,8 @@ package telran.java57.farmmarket.dto;
 
 import lombok.*;
 import telran.java57.farmmarket.model.OrderStatus;
-import telran.java57.farmmarket.model.PaymentStatus;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,9 +15,12 @@ import java.util.List;
 @Builder
 public class OrderResponseDto {
     private String id;
-    private List<String> productsId;
-    private LocalDateTime createdAt;
+    private String userLogin;
+    private List<OrderItemDto> items;
+//    private List<String> productsId;
+//    private LocalDateTime createdAt;
     private OrderStatus status;
     private Double totalPrice;
-    private PaymentStatus paymentStatus;
+    private Instant createdAt;
+    private Instant paidAt;
 }

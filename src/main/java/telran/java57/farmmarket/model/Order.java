@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,13 +21,17 @@ public class Order {
 
     private String userLogin;
 
-    private List<String> productsId;
+    private List<OrderItem> items;
 
-    private LocalDateTime createdAt;
-
-    private OrderStatus status;
+    @Builder.Default
+    private OrderStatus status = OrderStatus.CREATED;
 
     private Double totalPrice;
 
-    private PaymentStatus paymentStatus;
+//    private PaymentStatus paymentStatus;
+
+    private Instant createdAt;
+
+    private Instant paidAt;
+
 }

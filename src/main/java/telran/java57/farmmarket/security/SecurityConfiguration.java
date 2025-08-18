@@ -60,12 +60,14 @@ SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             .requestMatchers(HttpMethod.PUT, "/product/{id}").hasAnyRole("ADMINISTRATOR","SUPPLIER")
             .requestMatchers(HttpMethod.DELETE, "/product/{id}").hasAnyRole("ADMINISTRATOR","SUPPLIER")
             .requestMatchers(HttpMethod.PUT, "/product/{id}/status").hasAnyRole("MODERATOR","ADMINISTRATOR")
+            .requestMatchers(HttpMethod.GET, "/product/my-products").hasAnyRole("SUPPLIER","ADMINISTRATOR")
+            .requestMatchers(HttpMethod.GET, "/product/blocked").hasAnyRole("MODERATOR","ADMINISTRATOR")
 
             // orders
-            .requestMatchers(HttpMethod.POST, "/orders").hasRole("USER")
-            .requestMatchers(HttpMethod.POST, "/orders/{id}/pay").hasRole("USER")
+            .requestMatchers(HttpMethod.POST, "/orders").authenticated()
+            .requestMatchers(HttpMethod.POST, "/orders/*/pay").authenticated()
             .requestMatchers(HttpMethod.GET,  "/orders/my").authenticated()
-            .requestMatchers(HttpMethod.GET, "/orders/supplier").hasRole("SUPPLIER")
+            .requestMatchers(HttpMethod.GET, "/orders/supplier").hasAnyRole("SUPPLIER","ADMINISTRATOR")
             .requestMatchers(HttpMethod.GET, "/orders/moderator").hasRole("MODERATOR")
 
             // upload

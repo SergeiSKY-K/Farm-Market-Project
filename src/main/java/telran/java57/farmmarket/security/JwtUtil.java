@@ -65,7 +65,9 @@ public class JwtUtil {
                 .withExpiresAt(new Date(System.currentTimeMillis() + duration))
                 .sign(algorithm);
     }
-
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
     public String extractUsername(String token) {
         return getDecodedJWT(token).getSubject();
     }

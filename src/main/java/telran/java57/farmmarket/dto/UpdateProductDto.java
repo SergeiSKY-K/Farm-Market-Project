@@ -14,4 +14,5 @@ public class UpdateProductDto {
     private Integer quantity;
     private String category;
     private String imageUrl;
+    private String fileId;
 }

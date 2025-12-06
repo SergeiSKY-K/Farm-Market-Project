@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import telran.java57.farmmarket.dto.TokenResponseDto;
+import telran.java57.farmmarket.model.CookieProps;
 import telran.java57.farmmarket.security.AuthService;
 import telran.java57.farmmarket.security.JwtUtil;
 import telran.java57.farmmarket.security.UserDetailsServiceImpl;
@@ -23,20 +24,25 @@ import java.time.Duration;
 public class RefreshController {
 
     private final AuthService authService;
+    private final CookieProps cookieProps;
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         String token = extractTokenFromCookie(request);
         TokenResponseDto dto = authService.refresh(token);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", dto.getRefreshToken())
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie
+                .from("refreshToken", dto.getRefreshToken())
                 .httpOnly(true)
-                .path("/")
-                .secure(false)
-                .sameSite("Lax")
-                .maxAge(Duration.ofDays(7))
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                .path(cookieProps.getPath())
+                .secure(cookieProps.isSecure())
+                .sameSite(cookieProps.getSameSite())
+                .maxAge(Duration.ofMillis(cookieProps.getMaxAgeMs()));
+
+        if (cookieProps.getDomain() != null && !cookieProps.getDomain().isBlank()) {
+            builder.domain(cookieProps.getDomain());
+        }
+        response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + dto.getAccessToken())

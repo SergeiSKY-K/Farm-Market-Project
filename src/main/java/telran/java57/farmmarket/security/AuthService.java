@@ -15,6 +15,7 @@ import telran.java57.farmmarket.dao.UserRepository;
 import telran.java57.farmmarket.dto.LoginDto;
 import telran.java57.farmmarket.dto.TokenResponseDto;
 import telran.java57.farmmarket.dto.exceptions.UserNotFoundException;
+import telran.java57.farmmarket.model.CookieProps;
 import telran.java57.farmmarket.model.RefreshTokenEntity;
 import telran.java57.farmmarket.dto.UserDto;
 import telran.java57.farmmarket.model.UserAccount;
@@ -33,6 +34,37 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final CookieProps cookieProps;
+
+    private ResponseCookie buildRefreshCookie(String value) {
+        ResponseCookie.ResponseCookieBuilder b = ResponseCookie
+                .from("refreshToken", value)
+                .httpOnly(true)
+                .path(cookieProps.getPath())
+                .secure(cookieProps.isSecure())
+                .sameSite(cookieProps.getSameSite())
+                // можно использовать либо TTL из JwtUtil, либо из props — выбери одно:
+                .maxAge(Duration.ofMillis(jwtUtil.getRefreshExpiration()));
+        // .maxAge(Duration.ofMillis(cookieProps.getMaxAgeMs()));
+        if (cookieProps.getDomain() != null && !cookieProps.getDomain().isBlank()) {
+            b.domain(cookieProps.getDomain());
+        }
+        return b.build();
+    }
+
+    private ResponseCookie expireRefreshCookie() {
+        ResponseCookie.ResponseCookieBuilder b = ResponseCookie
+                .from("refreshToken", "")
+                .httpOnly(true)
+                .path(cookieProps.getPath())
+                .secure(cookieProps.isSecure())
+                .sameSite(cookieProps.getSameSite())
+                .maxAge(0);
+        if (cookieProps.getDomain() != null && !cookieProps.getDomain().isBlank()) {
+            b.domain(cookieProps.getDomain());
+        }
+        return b.build();
+    }
 
     public ResponseEntity<UserDto> login(LoginDto loginDto, HttpServletResponse response) {
         UserAccount userAccount = userRepository.findById(loginDto.getUsername())
@@ -44,25 +76,15 @@ public class AuthService {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(userAccount.getLogin());
 
-
         String accessToken = jwtUtil.generateAccessToken(userDetails);
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
-
 
         String hashedRefresh = hash(refreshToken);
         refreshTokenRepository.deleteById(userAccount.getLogin());
         refreshTokenRepository.save(new RefreshTokenEntity(userAccount.getLogin(), hashedRefresh));
 
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .path("/")
-                .secure(false)
-                .sameSite("Lax")
-                .maxAge(Duration.ofDays(7))
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
+        // Кладём refresh-cookie с флагами из конфига
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken).toString());
 
         UserDto dto = modelMapper.map(userAccount, UserDto.class);
         return ResponseEntity.ok()
@@ -72,17 +94,7 @@ public class AuthService {
 
     public ResponseEntity<Void> logout(String login, HttpServletResponse response) {
         refreshTokenRepository.deleteById(login);
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .path("/")
-                .secure(false)
-                .sameSite("Lax")
-                .maxAge(0)
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
+        response.addHeader(HttpHeaders.SET_COOKIE, expireRefreshCookie().toString());
         return ResponseEntity.noContent().build();
     }
 
@@ -93,7 +105,8 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
         String hashedRefresh = hash(refreshToken);
-        if (!hashedRefresh.equals(stored.getHashedRefreshToken()) || !jwtUtil.validateRefreshToken(refreshToken)) {
+        if (!hashedRefresh.equals(stored.getHashedRefreshToken())
+                || !jwtUtil.validateRefreshToken(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
 

@@ -17,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import telran.java57.farmmarket.api.SecurityExceptionHandlers;
 import telran.java57.farmmarket.model.Role;
 
 
@@ -27,11 +28,18 @@ import telran.java57.farmmarket.model.Role;
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtFilter;
+    private final SecurityExceptionHandlers securityExceptionHandlers;
 @Bean
 SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.cors(Customizer.withDefaults());
     http.csrf(csrf -> csrf.disable());
     http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+    http
+            .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(securityExceptionHandlers.authEntryPoint())
+                    .accessDeniedHandler(securityExceptionHandlers.accessDeniedHandler())
+            );
 
     http.authorizeHttpRequests(auth -> auth
             // public

@@ -29,6 +29,8 @@ public class Product {
     @Setter
     private String imageUrl;
     @Setter
+    private String fileId;
+    @Setter
     private String supplierLogin;
     @Setter
     private ProductStatus status;

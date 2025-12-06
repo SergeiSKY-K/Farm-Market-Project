@@ -13,4 +13,5 @@ public class ResponseProductDto {
     private int quantity;
     private String category;
     private String imageUrl;
+    private String fileId;
 }
